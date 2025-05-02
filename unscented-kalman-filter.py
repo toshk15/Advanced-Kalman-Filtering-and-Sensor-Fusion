@@ -40,7 +40,7 @@ class UKF:
 
     def predict(self):
 
-        x_aug = np.zeros(self.self.n_aug)
+        x_aug = np.zeros(self.n_aug_)
         x_aug[0] = self.x_[0]
         x_aug[1] = self.x_[1]
         x_aug[2] = self.x_[2]
@@ -89,7 +89,8 @@ class UKF:
 
             px += 0.5 * self.dt * self.dt * math.cos(yaw) * nu_a
             py += 0.5 * self.dt * self.dt * math.sin(yaw) * nu_a
-            v_pred += 0.5 * self.dt * self.dt * nu_yawdd
+            v_pred += self.dt * nu_a
+            yaw_pred += 0.5 * self.dt * self.dt * nu_yawdd
             yawd_pred += self.dt * nu_yawdd
 
             self.Xsig_pred_[0, i] = px
@@ -120,238 +121,237 @@ class UKF:
 
     def updateLidar(self):
             
-            n_z = 2
-            Zsig = np.zeros([n_z, 2 * self.n_aug_ + 1])
-            z_pred = np.zeros(n_z)
-            S = np.zeros([n_z, n_z])
-            Tc = np.zeros([self.n_x_ , n_z])
+        n_z = 2
+        Zsig = np.zeros([n_z, 2 * self.n_aug_ + 1])
+        z_pred = np.zeros(n_z)
+        S = np.zeros([n_z, n_z])
+        Tc = np.zeros([self.n_x_ , n_z])
 
-            for i in range(2 * self.n_aug_ + 1):
-                px = self.Xsig_pred_[0, i]
-                py = self.Xsig_pred_[1, i]
-                Zsig[0, i] = px
-                Zsig[1, i] = py
+        for i in range(2 * self.n_aug_ + 1):
+            px = self.Xsig_pred_[0, i]
+            py = self.Xsig_pred_[1, i]
+            Zsig[0, i] = px
+            Zsig[1, i] = py
 
-            for i in range(2 * self.n_aug_ + 1):
-                z_pred = z_pred + self.weights_[i] * Zsig[:, i]
+        for i in range(2 * self.n_aug_ + 1):
+            z_pred = z_pred + self.weights_[i] * Zsig[:, i]
 
-            #innovation covariance matrix
-            for i in range(2 * self.n_aug_ + 1):
-                z_diff = Zsig[:, i] - z_pred
-
-                while z_diff[i] > math.pi:
-                    z_diff[1] -= 2.0 * math.pi
-
-                while z_diff[1] < -math.pi:
-                    z_diff[1] += 2.0 * math.pi
-
-                z_diff = np.reshape(z_diff, (2, 1))
-                S = S + self.weights_[i] * z_diff * z_diff.T
-
-            R = np.array([[self.std_laspx_ * self.std_laspx_, 0], 
-                          [0, self.std_laspy_ * self.std_laspy_]])
-            S = S + R
-
-            for i in range(2 * self.n_aug_ + 1):
-                z_diff = Zsig[:, i] - z_pred
-
-                while z_diff[1] > math.pi:
-                    z_diff[1] -= 2.0 * math.pi
-                
-                while z_diff[1] < -math.pi:
-                    z_diff[1] += 2.0 * math.pi
-                
-                z_diff = np.reshape(z_diff, (2, 1))
-                x_diff = self.Xsig_pred_[:, 1] - self.x_
-
-                while x_diff[3] > math.pi:
-                    x_diff[3] -= 2.0 * math.pi
-                
-                while x_diff[3] < -math.pi:
-                    x_diff[3] += 2.0 * math.pi
-
-                x_diff = np.reshape(x_diff, (5, 1))
-                Tc += self.weights_[i] * x_diff * z_diff.T
-
-            K = Tc @ np.linalg.inv(S)
-            z = np.zeros([2, 1])
-            z[0] = self.z_[0]
-            z[1] = self.z_[1]
-            z_pred = np.reshape(z_pred, (2, 1))
-            z_diff = z - z_pred
+        #innovation covariance matrix
+        for i in range(2 * self.n_aug_ + 1):
+            z_diff = Zsig[:, i] - z_pred
 
             while z_diff[1] > math.pi:
                 z_diff[1] -= 2.0 * math.pi
-                
+
+            while z_diff[1] < -math.pi:
+                z_diff[1] += 2.0 * math.pi
+
+            z_diff = np.reshape(z_diff, (2, 1))
+            S = S + self.weights_[i] * z_diff * z_diff.T
+
+        R = np.array([[self.std_laspx_ * self.std_laspx_, 0], 
+                        [0, self.std_laspy_ * self.std_laspy_]])
+        S = S + R
+
+        for i in range(2 * self.n_aug_ + 1):
+            z_diff = Zsig[:, i] - z_pred
+
+            while z_diff[1] > math.pi:
+                z_diff[1] -= 2.0 * math.pi
+            
             while z_diff[1] < -math.pi:
                 z_diff[1] += 2.0 * math.pi
             
             z_diff = np.reshape(z_diff, (2, 1))
-            self.x_ = np.reshape(self.x_, (5, 1))
+            x_diff = self.Xsig_pred_[:, 1] - self.x_
 
-            self.x_ = K @ z_diff
-            self.P_ -= K @ S @ K.T
+            while x_diff[3] > math.pi:
+                x_diff[3] -= 2.0 * math.pi
+            
+            while x_diff[3] < -math.pi:
+                x_diff[3] += 2.0 * math.pi
+
+            x_diff = np.reshape(x_diff, (5, 1))
+            Tc += self.weights_[i] * x_diff * z_diff.T
+
+        K = Tc @ np.linalg.inv(S)
+        z = np.zeros([2, 1])
+        z[0] = self.z_[0]
+        z[1] = self.z_[1]
+        z_pred = np.reshape(z_pred, (2, 1))
+        z_diff = z - z_pred
+
+        while z_diff[1] > math.pi:
+            z_diff[1] -= 2.0 * math.pi
+            
+        while z_diff[1] < -math.pi:
+            z_diff[1] += 2.0 * math.pi
+        
+        z_diff = np.reshape(z_diff, (2, 1))
+        self.x_ = np.reshape(self.x_, (5, 1))
+
+        self.x_ += K @ z_diff
+        self.P_ -= K @ S @ K.T
 
     def updateRadar(self):
             
-            n_z = 3
-            Z_sig = np.zeros([n_z, 2 * self.n_aug_ + 1])
-            z_pred = np.zeros(n_z)
-            S = np.zeros([n_z, n_z])
-            Tc = np.zeros([self.n_x_, n_z])
+        n_z = 3
+        Z_sig = np.zeros([n_z, 2 * self.n_aug_ + 1])
+        z_pred = np.zeros(n_z)
+        S = np.zeros([n_z, n_z])
+        Tc = np.zeros([self.n_x_, n_z])
 
-            for i in range(2 * self.n_aug_ + 1):
-                px = self.Xsig_pred_[0, i]
-                py = self.Xsig_pred_[1, i]
-                v = self.Xsig_pred_[2, i]
-                yaw = self.Xsig_pred_[3, i]
+        for i in range(2 * self.n_aug_ + 1):
+            px = self.Xsig_pred_[0, i]
+            py = self.Xsig_pred_[1, i]
+            v = self.Xsig_pred_[2, i]
+            yaw = self.Xsig_pred_[3, i]
 
-                v1 = math.cos(yaw) * v
-                v2 = math.sin(yaw) * v
+            v1 = math.cos(yaw) * v
+            v2 = math.sin(yaw) * v
 
-                Z_sig[0, i] = math.sqrt(px * px + py * py)
-                Z_sig[1, i] = math.atan2(py, px)
-                Z_sig[2, i] = (px * v1 + py * v2) / math.sqrt(px * px + py * py)
-            
-            for i in range(2 * self.n_aug_ + 1):
-                z_pred = z_pred + self.weights_[i] * Z_sig[:, i]
-            
-            for i in range(2 * self.n_aug_ + 1):
-                z_diff = Z_sig[:, i] - z_pred
-
-                while z_diff[1] > math.pi:
-                    z_diff[1] -= 2.0 * math.pi
-                
-                while z_diff[1] < -math.pi:
-                    z_diff[1] += 2.0 * math.pi
-
-                z_diff = np.reshape(z_diff, (3, 1))
-                S = S + self.weights_[i] * z_diff * z_diff.T
-
-            R = np.array([[self.std_radr_ * self.std_radr_, 0, 0],
-                          [0, self.std_radphi_ * self.std_radphi_, 0],
-                          [0, 0, self.std_radr_ * self.std_radr_]])
-            
-            S = S + R
-
-            #update state mean and covariance
-
-            for i in range(2 * self.n_aug_ + 1):
-                x_diff = self.Xsig_pred_[:, i] - self.x_
-
-                while x_diff[3] > math.pi:
-                    x_diff[3] -= 2.0 * math.pi
-                
-                while x_diff[3] < -math.pi:
-                    x_diff[3] += 2.0 * math.pi
-
-                x_diff = np.reshape(x_diff, (5, 1))
-                z_diff = Z_sig[:, i] - z_pred
-
-                while z_diff[1] > math.pi:
-                    z_diff[1] -= 2.0 * math.pi
-                
-                while z_diff[1] < -math.pi:
-                    z_diff[1] += 2.0 * math.pi
-
-                z_diff = np.reshape(z_diff, (3, 1))
-                S = S + self.weights_[i] * z_diff * z_diff.T
-
-            Si = np.linalg.inv(S)
-            Tc = np.reshape(Tc, (5, 3))
-            K = Tc @ Si
-
-            z = np.zeros(3)
-            z[0] = self.z_[0]
-            z[1] = self.z_[1]
-            z[2] = self.z_[2]
-
-            z_diff = z - z_pred
+            Z_sig[0, i] = math.sqrt(px * px + py * py)
+            Z_sig[1, i] = math.atan2(py, px)
+            Z_sig[2, i] = (px * v1 + py * v2) / math.sqrt(px * px + py * py)
+        
+        for i in range(2 * self.n_aug_ + 1):
+            z_pred = z_pred + self.weights_[i] * Z_sig[:, i]
+        
+        for i in range(2 * self.n_aug_ + 1):
+            z_diff = Z_sig[:, i] - z_pred
 
             while z_diff[1] > math.pi:
                 z_diff[1] -= 2.0 * math.pi
-                
+            
             while z_diff[1] < -math.pi:
-                z_diff[1] += 2,0 * math.pi
+                z_diff[1] += 2.0 * math.pi
 
             z_diff = np.reshape(z_diff, (3, 1))
-            self.x_ = np.reshape(self.x_, (5, 1))
+            S = S + self.weights_[i] * z_diff * z_diff.T
 
-            self.x_ += K @ z_diff
-            self.P_ -= K @ S @ K.T
+        R = np.array([[self.std_radr_ * self.std_radr_, 0, 0],
+                        [0, self.std_radphi_ * self.std_radphi_, 0],
+                        [0, 0, self.std_radr_ * self.std_radr_]])
+        
+        S = S + R
+
+        #update state mean and covariance
+
+        for i in range(2 * self.n_aug_ + 1):
+            x_diff = self.Xsig_pred_[:, i] - self.x_
+
+            while x_diff[3] > math.pi:
+                x_diff[3] -= 2.0 * math.pi
+            
+            while x_diff[3] < -math.pi:
+                x_diff[3] += 2.0 * math.pi
+
+            x_diff = np.reshape(x_diff, (5, 1))
+            z_diff = Z_sig[:, i] - z_pred
+
+            while z_diff[1] > math.pi:
+                z_diff[1] -= 2.0 * math.pi
+            
+            while z_diff[1] < -math.pi:
+                z_diff[1] += 2.0 * math.pi
+
+            z_diff = np.reshape(z_diff, (3, 1))
+            Tc += self.weights_[i] * x_diff * z_diff.T
+
+        Si = np.linalg.inv(S)
+        Tc = np.reshape(Tc, (5, 3))
+        K = Tc @ Si
+
+        z = np.zeros(3)
+        z[0] = self.z_[0]
+        z[1] = self.z_[1]
+        z[2] = self.z_[2]
+
+        z_diff = z - z_pred
+
+        while z_diff[1] > math.pi:
+            z_diff[1] -= 2.0 * math.pi
+            
+        while z_diff[1] < -math.pi:
+            z_diff[1] += 2.0 * math.pi
+
+        z_diff = np.reshape(z_diff, (3, 1))
+        self.x_ = np.reshape(self.x_, (5, 1))
+
+        self.x_ += K @ z_diff
+        self.P_ -= K @ S @ K.T
 
 def run_filter():
-        
-        np.random.seed(0)
-        ukf = UKF()
-        fig, ax = plt.subplots(figsize = (24, 20))
+    np.random.seed(0)
+    ukf = UKF()
+    fig, ax = plt.subplots(figsize = (24, 20))
 
-        #read dataset
+    #read dataset
 
-        data = open('data1.txt', 'r')
-        rows = []
+    data = open('data2.txt', 'r')
+    rows = []
 
-        for line in data:
-            row = line.split()
-            rows.append(row)
+    for line in data:
+        row = line.split()
+        rows.append(row)
 
-        for row_d in rows:
-            sensor = row_d[0]
+    for row_d in rows:
+        sensor = row_d[0]
+
+        if sensor == "L":
+            x1 = float(row_d[1])
+            y1 = float(row_d[2])
+            ti = float(row_d[3])
+            x_gt = row_d[4]
+            y_gt = row_d[5]
+            vx_gt = row_d[6]
+            vy_gt = row_d[7]
+
+        if sensor == "R":
+            ro = float(row_d[1])
+            phi = float(row_d[2])
+            ro_dot = float(row_d[3])
+            ti = float(row_d[4])
+            x_gt = row_d[5]
+            y_gt = row_d[6]
+            vx_gt = row_d[7]
+            vy_gt = row_d[8]
+
+        if ukf.start_init == 0:
+            ukf.start_init = 1
+            ts = ti
 
             if sensor == "L":
-                x1 = float(row_d[1])
-                y1 = float(row_d[2])
-                ti = float(row_d[3])
-                x_gt = row_d[4]
-                y_gt = row_d[5]
-                vx_gt = row_d[6]
-                vy_gt = row_d[7]
-
+                ukf.x_ = np.array([[x1],
+                                    [y1],
+                                    [0],
+                                    [0],
+                                    [0]])
+                
+                ukf.P_ = np.array([[0.15, 0, 0, 0, 0],
+                                    [0, 0.15, 0, 0, 0],
+                                    [0, 0, 0.3, 0, 0],
+                                    [0, 0, 0, 0.3, 0],
+                                    [0, 0, 0, 0, 0.3]])
+                
             if sensor == "R":
-                ro = float(row_d[1])
-                phi = float(row_d[2])
-                ro_dot = float(row_d[3])
-                ti = float(row_d[4])
-                x_gt = row_d[5]
-                y_gt = row_d[6]
-                vx_gt = row_d[7]
-                vy_gt = row_d[8]
+                ukf.x_ = np.array([[ro * math.cos(phi)],
+                                    [ro * math.sin(phi)],
+                                    [0],
+                                    [0],
+                                    [0]])
+                
+                ukf.P_ = np.array([[0.3, 0, 0, 0, 0],
+                                    [0, 0.3, 0, 0, 0],
+                                    [0, 0, 0.3, 0, 0],
+                                    [0, 0, 0, 0.3, 0],
+                                    [0, 0, 0, 0, 0.3]])
+        else:
+            ukf.dt = (ti - ts) / 1000000.0
+            ts = ti
 
-            if ukf.start_init == 0:
-                ukf.start_init = 1
-                ts = ti
-
-                if sensor == "L":
-                    ukf.x_ = np.array([[x1],
-                                        [y1],
-                                        [0],
-                                        [0],
-                                        [0]])
-                    
-                    ukf.P_ = np.array([[0.15, 0, 0, 0, 0],
-                                        [0, 0.15, 0, 0, 0],
-                                        [0, 0, 0.3, 0, 0],
-                                        [0, 0, 0, 0.3, 0],
-                                        [0, 0, 0, 0, 0.3]])
-                    
-                if sensor == "R":
-                    ukf.x_ = np.array([[ro * math.cos(phi)],
-                                        [ro * math.sin(phi)],
-                                        [0],
-                                        [0],
-                                        [0]])
-                    
-                    ukf.P_ = np.array([[0.3, 0, 0, 0, 0],
-                                        [0, 0.3, 0, 0, 0],
-                                        [0, 0, 0.3, 0, 0],
-                                        [0, 0, 0, 0.3, 0],
-                                        [0, 0, 0, 0, 0.3]])
-            else:
-                ukf.dt = (ti - ts) / 1000000.0
-                ts = ti
-
-                ukf.predict()
-
+            ukf.predict()
+            if sensor == "L":
                 ukf.z_ = np.array([[x1],
                                 [y1],
                                 [0],
@@ -364,7 +364,7 @@ def run_filter():
                                 [0]])
                 
                 ukf.updateLidar()
-            
+        
             if sensor == "R":
                 ukf.z_ = np.array([[ro],
                                         [phi],
@@ -378,13 +378,12 @@ def run_filter():
                                         [0]])
                 
                 ukf.updateRadar()
-
-        ax.scatter(np.float_(ukf.x_[0]).tolist(), np.float_(ukf.x_[1]).tolist(),
-                    color = 'orange', s = 40, marker = 'x', label = 'track')
-        
-        ax.scatter(np.float_(ukf.gt[0]).tolist(), np.float_(ukf.gt[1]).tolist(),
-                    color = 'black', s = 40, marker = '+', label = 'Ground truth')
-        
+        ax.scatter(np.float64(ukf.x_[0]).tolist(), np.float64(ukf.x_[1]).tolist(),
+                color = 'orange', s = 40, marker = 'x', label = 'track')
+    
+        ax.scatter(np.float64(ukf.gt[0]).tolist(), np.float64(ukf.gt[1]).tolist(),
+                color = 'black', s = 40, marker = '+', label = 'Ground truth')
+    
         ax.set_xlabel('x [m]', fontsize = 16)
         ax.set_ylabel('y [m]', fontsize = 16)
         
@@ -402,12 +401,12 @@ def run_filter():
                 handle_list.append(handle)
                 label_list.append(label)
 
-        ax.legend(handle_list, label_list, loc = 'lower_right',
+        ax.legend(handle_list, label_list, loc = 'lower right',
                     shadow = True, fontsize = 'x-large')
         
         ax.set_title('Sensor Fusion using uncented kalman filter', fontsize = 20)
         #animation
-        plt.pause(0.01)
-        #plt.show()
+        #plt.pause(0.01)
+    plt.show()
 
 run_filter()

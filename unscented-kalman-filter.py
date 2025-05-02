@@ -79,7 +79,7 @@ class UKF:
             yaw_pred = yaw
             yawd_pred = yawd
 
-            if abs(yawd > 0.0001):
+            if abs(yawd) > 0.0001:
                 px += v / yawd * (math.sin(yaw + yawd * self.dt) - math.sin(yaw))
                 py += v / yawd * (-1 * math.cos(yaw + yawd * self.dt) + math.cos(yaw))
                 yaw_pred += yawd * self.dt

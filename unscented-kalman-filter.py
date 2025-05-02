@@ -163,7 +163,7 @@ class UKF:
                 z_diff[1] += 2.0 * math.pi
             
             z_diff = np.reshape(z_diff, (2, 1))
-            x_diff = self.Xsig_pred_[:, 1] - self.x_
+            x_diff = self.Xsig_pred_[:, i] - self.x_
 
             while x_diff[3] > math.pi:
                 x_diff[3] -= 2.0 * math.pi
@@ -288,7 +288,7 @@ def run_filter():
 
     #read dataset
 
-    data = open('data2.txt', 'r')
+    data = open('data1.txt', 'r')
     rows = []
 
     for line in data:

@@ -224,10 +224,10 @@ def run_filter():
             x, P = KF.radarUpdate(x, P, z, R)
 
         ax.scatter(np.float64(x[0]).tolist(), np.float64(x[1]).tolist(),
-                color = 'black', s = 40, marker = 'x', label = 'track')
+                color = 'blue', s = 40, marker = 'x', label = 'track')
 
         ax.scatter(np.float64(z1[0]).tolist(), np.float64(z1[1]).tolist(),
-                color = 'orange', s = 40, marker = '.', label = 'measurement')
+                color = 'red', s = 40, marker = '.', label = 'measurement')
         
         ax.scatter(np.float64(gt[0]).tolist(), np.float64(gt[1]).tolist(),
                 color = 'yellow', s = 40, marker = '+', label = 'GT')            
@@ -236,8 +236,8 @@ def run_filter():
         ax.set_xlabel('x [m]', fontsize = 16)
         ax.set_ylabel('y [m]', fontsize = 16)
         
-        ax.set_xlim(0, 30)
-        ax.set_ylim(-30, 30)
+        ax.set_xlim(0, 20)
+        ax.set_ylim(-20, 10)
 
         if matplotlib.rcParams['backend'] == 'wxagg':
             mng = plt.get_current_fig_manager()
@@ -253,7 +253,7 @@ def run_filter():
         ax.legend(handle_list, label_list, loc = 'lower right',
                     shadow = True, fontsize = 'x-large')
         
-        ax.set_title('Sensor Fusion using extended kalman filter', fontsize = 20)
+        ax.set_title('Sensor Fusion Radar and Lidar data using extended kalman filter', fontsize = 20)
         #animation
         #plt.pause(0.01)
     plt.show()

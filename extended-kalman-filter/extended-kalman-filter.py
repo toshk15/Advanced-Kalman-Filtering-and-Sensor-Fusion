@@ -9,7 +9,7 @@ class EKF:
 
     def __init__(self):
         self.dim_state = 4 
-        self.u = np.array([0., 0.])
+        self.u = np.array([[0., 0.]])
         self.dt = 0.1
         self.q = 0.1
         self.F =  self.F()
@@ -28,7 +28,7 @@ class EKF:
     def Q(self):
 
         return np.array([[self.dt**3 * self.q / 3., 0., self.dt**2 * self.q / 2., 0.  ],
-                        [0, self.dt**3 * self.q / 3., 0, self.dt**2 * self.q / 2. ],
+                        [0, self.dt**3 * self.q / 3., 0, self.dt**2 / 2. ],
                         [self.dt**2 * self.q / 2., 0., self.dt * self.q, 0.],
                         [0., self.dt**2 * self.q / 2., 0., self.dt * self.q]]
         )
@@ -81,7 +81,7 @@ class EKF:
         x = x + K @ gamma
 
         I = np.identity(n = self.dim_state)
-        P = (I - np.matmul(K, self.HR) @ P)
+        P = (I - np.matmul(K, self.HR)) @ P
 
         return x, P
 
@@ -98,7 +98,7 @@ class EKF:
         if rho < 0.000001:
             rho = 0.000001
         
-        rho_dot = (px * px + py * py) / rho
+        rho_dot = (px * vx + py * vy) / rho
         z_pred = np.array([[rho], [phi], [rho_dot]])
 
         return z_pred

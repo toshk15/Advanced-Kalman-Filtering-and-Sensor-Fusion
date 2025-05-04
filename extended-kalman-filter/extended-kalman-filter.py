@@ -147,7 +147,7 @@ def run_filter():
 
     #read dataset
 
-    data = open('data1.txt', 'r')
+    data = open('data2.txt', 'r')
     rows = []
 
     for line in data:
@@ -235,9 +235,12 @@ def run_filter():
     
         ax.set_xlabel('x [m]', fontsize = 16)
         ax.set_ylabel('y [m]', fontsize = 16)
+
+        ax.set_xlim(-30, 30)
+        ax.set_ylim(-30, 30)
         
-        ax.set_xlim(0, 20)
-        ax.set_ylim(-20, 10)
+        #ax.set_xlim(0, 20)
+        #ax.set_ylim(-20, 10)   
 
         if matplotlib.rcParams['backend'] == 'wxagg':
             mng = plt.get_current_fig_manager()

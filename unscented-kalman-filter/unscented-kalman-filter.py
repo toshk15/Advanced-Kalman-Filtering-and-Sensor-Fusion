@@ -387,8 +387,11 @@ def run_filter():
         ax.set_xlabel('x [m]', fontsize = 16)
         ax.set_ylabel('y [m]', fontsize = 16)
         
-        ax.set_xlim(-30, 30)
-        ax.set_ylim(-30, 30)
+        #ax.set_xlim(-30, 30)
+        #ax.set_ylim(-30, 30)
+
+        #ax.set_xlim(0, 20)
+        #ax.set_ylim(-20, 10)  
 
         if matplotlib.rcParams['backend'] == 'wxagg':
             mng = plt.get_current_fig_manager()
@@ -404,7 +407,7 @@ def run_filter():
         ax.legend(handle_list, label_list, loc = 'lower right',
                     shadow = True, fontsize = 'x-large')
         
-        ax.set_title('Sensor Fusion using uncented kalman filter', fontsize = 20)
+        ax.set_title('Sensor Fusion Radar and Lidar using unscented kalman filter', fontsize = 20)
         #animation
         #plt.pause(0.01)
     plt.show()

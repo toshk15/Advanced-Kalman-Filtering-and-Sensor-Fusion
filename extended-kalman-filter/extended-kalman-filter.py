@@ -147,7 +147,7 @@ def run_filter():
 
     #read dataset
 
-    data = open('data2.txt', 'r')
+    data = open('data.txt', 'r')
     rows = []
 
     for line in data:

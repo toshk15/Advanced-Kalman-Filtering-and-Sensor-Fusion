@@ -1,5 +1,25 @@
 Advanced Kalman Filtering and Sensor Fusion
 
+Equation Extended Kalman Filter source from Udemy course https://www.udemy.com/course/advanced-kalman-filtering-and-sensor-fusion
+
+![Screenshot from 2025-05-04 17-57-56](https://github.com/user-attachments/assets/9c513136-6759-48dc-b0df-d570cc405b80)
+
+![Screenshot from 2025-05-04 17-59-14](https://github.com/user-attachments/assets/a106c857-2c4b-4303-8642-a4c9cb9369fc)
+
+
+Equation Unscented Kalman Filter source from Udemy course https://www.udemy.com/course/advanced-kalman-filtering-and-sensor-fusion
+
+![Screenshot from 2025-05-04 18-00-19](https://github.com/user-attachments/assets/44fd83b6-1114-482e-a136-0027ada17b0f)
+
+![Screenshot from 2025-05-04 18-04-16](https://github.com/user-attachments/assets/bb264002-74dc-40ba-83c7-73536ad3cd0e)
+
+![Screenshot from 2025-05-04 18-05-35](https://github.com/user-attachments/assets/36893a2a-60c9-4965-a8ec-f8bcba6a7afd)
+
+![Screenshot from 2025-05-04 18-07-14](https://github.com/user-attachments/assets/c75d014e-8d45-4dbc-b32d-c8c94c11b0f1)
+
+
+
+
 DATASET data.txt
 
 ![extendedkalmanfilter](https://github.com/user-attachments/assets/9c0cbbec-59c8-4e3f-ae50-b97ab1830e9c)

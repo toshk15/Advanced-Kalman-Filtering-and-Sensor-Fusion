@@ -17,8 +17,11 @@ Equation Unscented Kalman Filter source from Udemy course https://www.udemy.com/
 
 ![Screenshot from 2025-05-04 18-07-14](https://github.com/user-attachments/assets/c75d014e-8d45-4dbc-b32d-c8c94c11b0f1)
 
+The Extended Kalman Filter (EKF) linearizes nonlinear functions using Taylor series approximations and Jacobians, while the Unscented Kalman Filter (UKF) uses the Unscented Transform (UT) with sigma points to sample the probability distribution and propagate it through the nonlinear functions, avoiding the need for derivatives. The UKF is generally more accurate for highly nonlinear systems and more robust to initial estimates but can be computationally more expensive than the EKF, which can be faster for mildly nonlinear systems
 
+Results:
 
+Run the same dataset1 using extended and unscented kalman filter
 
 Dataset: Radar_Lidar_1.txt
 
@@ -26,6 +29,9 @@ Dataset: Radar_Lidar_1.txt
 
 ![unscented3](https://github.com/user-attachments/assets/e5b8a54e-e145-407b-807f-7b53e1e83e37)
 
+Results:
+
+Run the same dataset2 using extended and unscented kalman filter
 
 Dataset: Radar_Lidar_2.txt
 
